@@ -1,0 +1,43 @@
+---
+title: "Assignment 1: Introduction"
+author: "Kayla Emerson"
+output: pdf_document
+---
+
+## OVERVIEW
+
+This exercise accompanies the introductory material in Environmental Data Analytics. 
+
+## Directions
+1.  Rename this file `<FirstLast>_A01_Introduction.Rmd` (replacing `<FirstLast>` with your first and last name).
+2.  Change "Student Name" on line 3 (above) with your name.
+3.  Work through the steps, **creating code and output** that fulfill each instruction.
+4.  Be sure to **answer the questions** in this assignment document.
+5.  When you have completed the assignment, **Knit** the text and code into a single PDF file.
+6.  After Knitting, submit the completed exercise (PDF file) to the appropriate assignment section on Canvas.
+
+
+## 1) Discussion Questions
+Enter answers to the questions just below the >Answer: prompt.
+
+1. What are your previous experiences with data analytics, R, and Git? Include both formal and informal training.
+
+> Answer: I have some experience with data anlytics and more experience with R and Git. I've taken two classes that focused solely on R and they both utlilized Git. I also have used Git to store data for research personal and school projects previously.
+
+2. Are there any components of the course about which you feel confident?
+
+> Answer: I feel pretty confident with the coding basics of this class and the RStudio interface. I have been coding in R for a few years now and always find new things to learn. 
+
+3. Are there any components of the course about which you feel apprehensive?
+
+> Answer: I feel appregensice about the statistical side of this class. I feel confident with the coding, but less so with analyzing the final results and determining what they mean. But, I'm excited to get to focus more on that!
+
+
+## 2) GitHub
+
+Provide a link below to your forked course repository in GitHub. Make sure you have pulled all recent changes from the course repository and that you have updated your course README file, committed those changes, and pushed them to your GitHub account. 
+
+> Answer: https://github.com/kaylamemerson/EDE_Fall2024
+
+## 3) Knitting
+When you have completed this document, click the `knit` button.This should produce a PDF copy of your markdown document. Submit this PDF to Canvas 
