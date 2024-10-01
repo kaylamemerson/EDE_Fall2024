@@ -61,10 +61,10 @@ EPAair.PM25.NC2019.data <- read.csv(
 
 #2 
 #reveal dimensions
-dim(EPAair.O3.NC2018.data)
-dim(EPAair.O3.NC2019.data)
-dim(EPAair.PM25.NC2018.data)
-dim(EPAair.PM25.NC2019.data)
+print(dim(EPAair.O3.NC2018.data))
+print(dim(EPAair.O3.NC2019.data))
+print(dim(EPAair.PM25.NC2018.data))
+print(dim(EPAair.PM25.NC2019.data))
 ```
 
 >All four datasets should have the same number of columns but unique record counts (rows). Do your datasets follow this pattern?
@@ -181,8 +181,7 @@ O3.PM25.combined <- rbind(EPAair.O3.NC2018.data.processed,
 
 #8 
 #wrangle the combined dataset
-#errors :/
-O3.PM25.combined <- 
+O3.PM25.combined.piped <- 
   O3.PM25.combined %>%
   filter(Site.Name == "Linville Falls" | Site.Name == "Durham Armory" | 
            Site.Name == "Leggett" | Site.Name == "Hattie Avenue" | 
@@ -191,23 +190,33 @@ O3.PM25.combined <-
            Site.Name =="Garinger High School" |Site.Name == "Castle Hayne" | 
            Site.Name == "Pitt Agri. Center" | Site.Name == "Bryson City"|
            Site.Name =="Millbrook School") %>%
-  group_by(Date, AQS_PARAMETER_DESC, COUNTY) %>%
+  group_by(Date, Site.Name, AQS_PARAMETER_DESC, COUNTY) %>%
   filter(!is.na(DAILY_AQI_VALUE) & !is.na(SITE_LATITUDE) & !is.na(SITE_LONGITUDE)) %>%
-  summarize(meanAQI = mean(DAILY_AQI_VALUE)) %>%
-  summarize(meanLat = mean(SITE_LATITUDE)) %>%
-  summarize(meanLong = mean(SITE_LONGITUDE)) 
-  
-  
+  summarize(meanAQI = mean(DAILY_AQI_VALUE), 
+                           meanLat = mean(SITE_LATITUDE), 
+                           meanLong = mean(SITE_LONGITUDE)) %>%
+  mutate(Month = month(Date), 
+         Year = year(Date))
+#check dimensions  
+dim(O3.PM25.combined.piped)
 
-  
 #9
-
+#spread dataset 
+PM25.combined.spread <-
+  O3.PM25.combined.piped %>% 
+  pivot_wider(
+    names_from = AQS_PARAMETER_DESC, 
+    values_from = meanAQI 
+  )
 
 #10
-
+#get dimensions of new dataset 
+print(dim(PM25.combined.spread))
 
 #11
-
+#save processed data
+write.csv(PM25.combined.spread, row.names = FALSE, 
+          file = "./Data/Processed/EPAair_O3_PM25_NC1819_Processed.csv")
 
 ```
 
@@ -221,15 +230,23 @@ O3.PM25.combined <-
 ```{r questions 12 and 13}
 
 #12
-
+#make summary data frame
+summary.EPair.df <-
+  PM25.combined.spread %>% 
+  group_by(Site.Name, Month, Year) %>% 
+  summarise(meanAQIPM = mean(PM2.5), 
+            meanOzonePM = mean(Ozone)) %>% 
+  drop_na(meanOzonePM)
 
 #13
-
-
+#get dimensions 
+print(dim(summary.EPair.df))
 
 ```
 
 14. Why did we use the function `drop_na` rather than `na.omit`? Hint: replace `drop_na` with `na.omit` in part 12 and observe what happens with the dimensions of the summary date frame.
 
-> Answer: 
+> Answer: We used drop_na rather than na.omit because na.omit gets rid of the any rows that have
+"NA" in any column whereas drop_na just removes the row that has "NA" for the selected 
+column, which is MeanOzonePM for our purposes. 
 
