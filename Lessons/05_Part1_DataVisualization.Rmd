@@ -6,7 +6,10 @@ output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
   chunk_output_type: console
+toc: true
 ---
+
+\listoffigures
 
 ## Objectives
 1. Perform simple data visualizations in the R package `ggplot`
@@ -76,9 +79,11 @@ Here are some commonly used aesthetic types that can be manipulated in ggplot:
 * size
 * transparency
 
+\newpage
+
 ### Plotting continuous variables over time: Scatterplot and Line Plot
 
-```{r, fig.height = 3, fig.width = 4, warning = FALSE}
+```{r, fig.height = 3, fig.width = 4, fog.cap = "Scatterplot", warning = FALSE}
 # Scatterplot
 ggplot(EPAair, aes(x = Date, y = Ozone)) + 
   geom_point()
