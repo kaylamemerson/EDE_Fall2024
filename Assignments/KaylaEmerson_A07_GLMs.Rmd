@@ -155,7 +155,7 @@ step(lake_chem_all)
 
 regression.two <- lm(
   data = lake_chem_wrangled,
-  temperature_C ~ depth + daynum)
+  temperature_C ~ depth + daynum + year4)
 summary(regression.two)
 
 
@@ -163,7 +163,7 @@ summary(regression.two)
 
 11. What is the final set of explanatory variables that the AIC method suggests we use to predict temperature in our multiple regression? How much of the observed variance does this model explain? Is this an improvement over the model using only depth as the explanatory variable?
 
-> Answer: The AIC method suggests we use depth and daynum to predict the temperature 
+> Answer: The AIC method suggests we use depth, daynum, and year4 to predict the temperature 
 in the multiple regression. This model explains 74.12% of the the observed variance, which is a 
 very small improvement using only depth as the explanatory variable. 
 
