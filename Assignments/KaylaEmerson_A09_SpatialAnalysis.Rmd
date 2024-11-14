@@ -161,23 +161,27 @@ Lastly, we want to attach some gage height data to our site locations. I've cons
 
 ```{r Read in gage site data}
 #14. Read the site flow data into a data frame
-
-
+gage_height_df <- read_csv(here('Data/Raw/NWIS_SiteFlowData_NE_RAW.csv')) %>% 
+  mutate(site_no = as.factor(station_nm))
+  
 
 #15. Show the column names
-
+print(colnames(gage_height_df))
 
 
 #16. Join the flow data to our NWIS gage location spatial dataframe
-
+gage_sf_join <- gage.sf %>% 
+  left_join(gage_height_df, 
+            by = c("station_nm" = "station_nm")) %>% 
+  filter(!is.na(site_no.y))
 
 
 #17. Show the column names in the resulting spatial dataframe
-
+print(colnames(gage_sf_join))
 
 
 #18. Show the dimensions of this joined dataset
-
+print(dim(gage_sf_join))
 
 
 ```
@@ -190,7 +194,11 @@ Now we can examine where the flooding appears most acute by visualizing gage hei
 
 ```{r map gage sites}
 #Map the points, sized by gage height
-
+ggplot(data=nebraska_sf) +
+  geom_sf(fill = "lightgreen") +
+  geom_sf(data = gage_sf_join, aes(size = gage_ht)) +
+  labs(title = "NWIS Gage Locations and Heights in Nebraska", 
+       subtitle = "Kayla Emerson")
 
 ```
 
@@ -208,11 +216,15 @@ Up next we will do some spatial analysis with our data. To prepare for this, we 
 
 ```{r spatial analysis}
 #20 Transform the counties and gage location datasets to UTM Zone 14
-
-
+nebraska.sf.utm <- st_transform(nebraska_sf,crs = 32614)
+gage.sf.join.utm <- st_transform(gage_sf_join,crs = 32614)
 
 #21 Plot the data
-
+ggplot(data=nebraska.sf.utm) +
+  geom_sf(fill = "lightgreen") +
+  geom_sf(data = gage.sf.join.utm, aes(size = gage_ht)) +
+  labs(title = "NWIS Gage Locations and Heights in Nebraska", 
+       subtitle = "Kayla Emerson")
 
 
 ```
@@ -233,15 +245,33 @@ Now let's zoom into a particular county and examine the gages located there.
 
 ```{r spatial selection}
 #22 Select the county
-
+lancaster.sf <- nebraska.sf.utm %>% 
+  filter(NAME == "Lancaster") 
 
 #23 Spatially select gages within the selected county
-
+lancaster_gage.sf <- gage.sf.join.utm %>% 
+  st_intersection(lancaster.sf)
+  
 
 #24 Spatially select gages within 15 k of the selected county
+buffer_15km <- st_buffer(lancaster.sf, dist = 15000)
+
+gages_within_15km <- gage.sf.join.utm %>% 
+  st_intersection(buffer_15km)
 
 
 #25 Plot
-
+ggplot(data=nebraska.sf.utm) +
+  geom_sf(color = "darkblue") +
+  geom_sf(data = lancaster.sf, fill = "lightgreen") +
+  geom_sf(data = gages_within_15km, aes(color = "Gage Sites within 15km"), size = 1) +
+  geom_sf(data = lancaster_gage.sf, aes(color = "Gage Sites in Lancaster"), size = 1) +
+  scale_color_manual(name = "Gage Site Types", 
+                     values = c("Gage Sites in Lancaster" = "red",
+                                "Gage Sites within 15km" = "darkblue")) +
+  labs(title = "NWIS Gage Locations in Lancaster County, Nebraska", 
+       subtitle = "Map by Kayla Emerson",
+       x = "Longitude",
+       y = "Latitude")
 
 ```
