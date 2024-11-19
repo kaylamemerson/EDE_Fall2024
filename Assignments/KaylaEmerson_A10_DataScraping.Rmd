@@ -134,13 +134,12 @@ df_water$Maximum.Day.Use[12] <- MGD[12]
 #5 
 #Create a line plot 
 plot_5 <- df_water %>% 
-  ggplot(aes(x = Month, y = MGD)) +
-  geom_line() +
-  geom_point() +
+  ggplot(aes(x = Month, y = Maximum.Day.Use)) +
+  geom_line(group = 1, color = "lightblue") +
+  geom_point(color = "blue") +
   labs(title = "Maximum Daily Withdrawals of Water in Durham for 2023")
 
-plot_5
-#fix its ugly
+print(plot_5)
 ```
 
 
@@ -149,56 +148,57 @@ plot_5
 
 ```{r construct.a.scraping.function}
 #6. 
-#fix to include pwsid 
-
-
 #create function 
-scrape.it <- function(any_pwsid, the_year){
+#define function
+scrape.it <- function(any_pwsid, any_year){
   #Get the proper url
-  the_url <- ifelse(
-    the_year=='2023'
-    'https://www.ncwater.org/WUDC/app/LWSP',
-    paste0('https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=',the_year)
-    )
+  the_url <- paste(
+    "https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=", any_pwsid,
+    "&year=", any_year, sep = "")
 
   #Fetch the website
   the_website <- read_html(the_url) 
   
+  #set knowns 
+  PWSID <- any_pwsid
+  year <- any_year
+  
   #Scrape the data
- waterSystemName <- the_website  %>% 
+  waterSystemName <- the_website  %>% 
   html_nodes("div+ table tr:nth-child(1) td:nth-child(2)") %>%  
-  html_text()
+  html_text(trim = TRUE)
 
-PWSID <- the_website  %>% 
-  html_nodes("td tr:nth-child(1) td:nth-child(5)") %>%  
-  html_text()
-
-Ownership <- the_website  %>% 
+  Ownership <- the_website  %>% 
   html_nodes("div+ table tr:nth-child(2) td:nth-child(4)") %>%  
-  html_text() 
+  html_text(trim = TRUE) 
 
-MGD <- the_website  %>% 
+  MGD <- the_website  %>% 
   html_nodes("th~ td+ td") %>%  
-  html_text() 
+  html_text(trim = TRUE)
+  
+  #convert MGD to numeric 
+  MGD <- as.numeric(MGD)
+  
+  #manual month column
+  months <- c("January", "May", "September", "February", "June", "October", "March",
+              "July", "November", "April", "August", "December")
+  
+  #manual date column to get everything in chronological order
+  dates <- as.Date(paste(year, months, "1"), format = "%Y %b %d")
   
   #Convert to dataframe
-  df_water <- data.frame("Water System Name" = waterSystemName,
-                             "PWSID" = PWSID, 
-                        "Ownership" = Ownership,
-                        "Maximum Day Use" = as.numeric(gsub(".", "", 
-                                                          MGD)), 
-                       "Month" = c("January", "February", "March", "April", "May", 
-                                   "June", "July", "August", "September",
-                                   "October", "November", "December"))
-
-  df_water$Month <- factor(df_water$Month, levels = c("January", "February", 
-                                                      "March", "April", "May", 
-                                   "June", "July", "August", "September",
-                                   "October", "November", "December"))
+  df_target <- data.frame(
+    "Date" = dates,
+    "Year" = rep(year, length(months)), 
+    "Month" = months,
+    "Water System Name" = waterSystemName,
+    "PWSID" = PWSID, 
+    "Ownership" = Ownership,
+    "Maximum Day Use" = MGD)
 
 
   #Return the dataframe
-  return(df_water)
+  return(df_target)
 }
 
 ```
@@ -207,9 +207,17 @@ MGD <- the_website  %>%
 
 ```{r fetch.and.plot.Durham.2015.data}
 #7 
+#run the function
+test_2015_durm <- scrape.it("03-32-010", 2015)
 
-scrape.it(03-32-010, 2015)
+#plot the results
+plot_7 <- test_2015_durm %>% 
+  ggplot(aes(x = Date, y = Maximum.Day.Use)) +
+  geom_line(group = 1, color = "lightblue") +
+  geom_point(color = "blue") +
+  labs(title = "Maximum Daily Withdrawals of Water in Durham for 2015")
 
+print(plot_7)
 
 
 ```
@@ -218,8 +226,33 @@ scrape.it(03-32-010, 2015)
 
 ```{r fetch.and.plot.Asheville.2015.data}
 #8 
+#run function for Asheville in 2015
+test_2015_ash <- scrape.it("01-11-010", 2015)
 
+#plot the results
+plot_8 <- test_2015_ash %>% 
+  ggplot(aes(x = Date, y = Maximum.Day.Use)) +
+  geom_line(group = 1, color = "lightblue") +
+  geom_point(color = "blue") +
+  labs(title = "Maximum Daily Withdrawals of Water in Asheville for 2015")
 
+print(plot_8)
+
+#combined data frames 
+ash_and_durm_2015 <- rbind(test_2015_durm, test_2015_ash)
+
+#plot both together
+plot_8b <- ash_and_durm_2015 %>% 
+  ggplot(aes(x = Date, y = Maximum.Day.Use, color = PWSID)) +
+  geom_line() +
+  labs(
+    title = "Comparison of Maximum Daily Withdrawals of Water in 
+    Asheville and Durham in 2015", 
+    subtitle = "Durham code = 03-32-010; Asheville code = 01-11-010"
+  )
+
+print(plot_8b)
+  
 ```
 
 
@@ -229,10 +262,28 @@ scrape.it(03-32-010, 2015)
 
 ```{r fetch.and.plot.Asheville.multiyear.data }
 #9 
+#make years a vector 
+years_2018to2022 <- 2018:2022
 
+#make Asheville ID vector of equal length 
+ashe_PWSID_repeated  <- rep("01-11-010", length(years_2018to2022))
 
+#use map2 with 2 vectors of equal length to retrieve all data 
+ashe_2018to2022 <- map2(ashe_PWSID_repeated, years_2018to2022,
+                        scrape.it) %>% bind_rows()
+
+#plot
+plot_9 <- ashe_2018to2022 %>% 
+  ggplot(aes(x = Date, y = Maximum.Day.Use)) +
+  geom_line() +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(title = "Maximum Daily Withdrawals of Water in Asheville from 2018 to 2022")
+
+print(plot_9)
 ```
 
 Question: Just by looking at the plot (i.e. not running statistics), does Asheville have a trend in water usage over time?
 > Answer:
->
+> I think there is a somewhat of an upwards trend in water usuage over time, but 
+it's not a strong trend. Usuage increased from 2018 to 2020, but then fell a little 
+until 2021 where it thne started to increase again. 
